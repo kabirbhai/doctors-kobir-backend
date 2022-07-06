@@ -19,14 +19,29 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    console.log("connected");
-    const servicesCollection = client
-      .db("Doctors-kobir")
-      .collection("Services");
+    const serviceCollection = client.db("Doctors-kobir").collection("Services");
+    const bookingCollection = client.db("Doctors-kobir").collection("Booking");
 
+    // LOAD ALL SERVICE
     app.get("/service", async (req, res) => {
-      const services = await servicesCollection.find({}).toArray();
+      const services = await serviceCollection.find({}).toArray();
       res.send(services);
+    });
+
+    // BOOKING SERVICE
+    app.post("/booking", async (req, res) => {
+      const booking = req.body;
+      const filter = {
+        treatment: booking.treatment,
+        date: booking.date,
+        patent: booking.patent,
+      };
+      const exists = await bookingCollection.findOne(filter);
+      if (exists) {
+        return res.send({ success: false, booking: exists });
+      }
+      const result = await bookingCollection.insertOne(booking);
+      return res.send({ success: true, result });
     });
   } finally {
   }
