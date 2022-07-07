@@ -40,7 +40,7 @@ async function run() {
     const userCollection = client.db("Doctors-kobir").collection("Users");
 
     // LOAD ALL USER
-    app.get("/user", async (req, res) => {
+    app.get("/user", verifyJWT, async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
@@ -61,6 +61,24 @@ async function run() {
         { expiresIn: "1h" }
       );
       res.send({ result, token });
+    });
+
+    app.put("/user/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const requester = req.decoded.email;
+      const requesterAccount = await userCollection.findOne({
+        email: requester,
+      });
+      if (requesterAccount.role === "admin") {
+        const filter = { email: email };
+        const updateDoc = {
+          $set: { role: "admin" },
+        };
+        const result = await userCollection.updateOne(filter, updateDoc);
+        return res.send(result);
+      } else {
+        return res.status(403).send({ message: "forbidden access" });
+      }
     });
 
     // LOAD ALL SERVICE
