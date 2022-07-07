@@ -45,6 +45,14 @@ async function run() {
       res.send(users);
     });
 
+    // admin api
+    app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email: email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
+    });
+
     // USER COLLECTION API
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
